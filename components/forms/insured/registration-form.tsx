@@ -159,9 +159,8 @@ export const InsuredRegistrationForm: React.FC<Props> = ({
           label="Souscripteur"
           placeholder="Choisir un souscripteur"
           onChange={(value) => {
-            let souscripteurItem = subscribers.find((element) => element.id == value);
+            const souscripteurItem = subscribers.find((element) => element.id == value);
             setSubscriberSelected(souscripteurItem);
-            console.log(souscripteurItem)
           }}
         >
           {subscribers?.map((subscriber) => (
