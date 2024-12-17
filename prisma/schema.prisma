@@ -1,0 +1,281 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // uncomment next line if you use Prisma <5.10
+  // directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  FIRST_AIDERS
+  CARE_CENTER
+  BROKERAGECOMPANY
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum Declarant {
+  FIRST_AIDERS
+  HEALTH_CENTER
+}
+
+model BrokerageCompany {
+  id     String  @id @default(uuid())
+  name   String?
+  number String?
+
+  users       User[]
+  compagnies  Company[]
+  bringers    Bringer[]
+  subscribers Subscriber[]
+  Insureds    Insured[]
+}
+
+model User {
+  id                    String                 @id @default(uuid())
+  name                  String?
+  email                 String?                @unique
+  emailVerified         DateTime?
+  image                 String?
+  password              String?
+  role                  UserRole               @default(USER)
+  accounts              Account[]
+  isTwoFactorEnabled    Boolean                @default(false)
+  twoFactorConfirmation TwoFactorConfirmation?
+  BrokerageCompany      BrokerageCompany?      @relation(fields: [brokerageCompanyId], references: [id])
+  brokerageCompanyId    String?
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorToken {
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorConfirmation {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+}
+
+// ##########################
+
+model Bringer {
+  id        String  @id @default(uuid())
+  avatar    String?
+  firstName String
+  lastName  String
+  phone     String
+  email     String  @unique
+  terminate Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Subscribers        Subscriber[]
+  BrokerageCompany   BrokerageCompany? @relation(fields: [brokerageCompanyId], references: [id])
+  brokerageCompanyId String?
+}
+
+model Company {
+  id      String  @id @default(uuid())
+  avatar  String?
+  name    String
+  phone   String
+  email   String  @unique
+  address String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Insured            Insured[]
+  BrokerageCompany   BrokerageCompany? @relation(fields: [brokerageCompanyId], references: [id])
+  brokerageCompanyId String?
+}
+
+model Subscriber {
+  id                 String  @id @default(uuid())
+  avatar             String?
+  subscriberFullName String
+  taxpayer           String?
+  fieldOfActivity    String?
+  address            String
+  email              String  @unique
+  phoneNumber        String
+  prime              String? @db.VarChar(10)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Insured Insured[]
+
+  bringerId          String
+  bringer            Bringer           @relation(fields: [bringerId], references: [id], onDelete: Cascade)
+  BrokerageCompany   BrokerageCompany? @relation(fields: [brokerageCompanyId], references: [id])
+  brokerageCompanyId String?
+}
+
+model Insured {
+  id                   String   @id @default(uuid())
+  avatar               String
+  identifier           String
+  firstName            String
+  lastName             String
+  birthday             DateTime
+  placeOfBirth         String
+  bloodGroup           String
+  professionalActivity String
+  email                String   @unique
+  address              String
+  phoneNumber          String
+  urgentNumber         String
+  city                 String
+  prefecture           String
+
+  policyNumber   String?
+  paiementMode   String?
+  effectiveDate  DateTime?
+  expirationDate DateTime?
+  status         Status    @default(ACTIVE)
+
+  typeOfContrat String?
+  beneficiaries Beneficiary[] @relation("InsuredBeneficiaries")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  guarantee Guarantee?
+  prime     Prime?
+  treatment Treatment?
+
+  subscriber         Subscriber        @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  subscriberId       String
+  company            Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId          String
+  BrokerageCompany   BrokerageCompany? @relation(fields: [brokerageCompanyId], references: [id])
+  brokerageCompanyId String?
+}
+
+model Beneficiary {
+  id         String @id @default(uuid())
+  fullName   String
+  percentage Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  insuredId String
+  insured   Insured? @relation("InsuredBeneficiaries", fields: [insuredId], references: [id])
+}
+
+model Guarantee {
+  id                String @id @default(uuid())
+  product           String @db.VarChar(15)
+  capitaldeath      String @db.VarChar(10)
+  disabilityCapital String @db.VarChar(10)
+  medicalFees       String @db.VarChar(10)
+  dailyFees         String @db.VarChar(10)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //prime Prime?
+
+  insured   Insured @relation(fields: [insuredId], references: [id], onDelete: Cascade)
+  insuredId String  @unique
+}
+
+model Prime {
+  id                String @id @default(uuid())
+  deathCapital      Int
+  individualCapital Int
+  medicalExpenses   Int
+  dailyCosts        Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //guarantee   Guarantee @relation(fields: [guaranteeId], references: [id], onDelete: Cascade)
+  //guaranteeId String    @unique
+  insured   Insured @relation(fields: [insuredId], references: [id], onDelete: Cascade)
+  insuredId String  @unique
+}
+
+model Treatment {
+  id             String    @id @default(uuid())
+  pickupDate     DateTime
+  pickupLocation String
+  supportCenter  String
+  report         String
+  declarant      Declarant @default(FIRST_AIDERS)
+
+  createdAt DateTime @default(now())
+
+  insured   Insured @relation(fields: [insuredId], references: [id], onDelete: Cascade)
+  insuredId String  @unique
+}
+
+model Flow {
+  id          Int    @id @default(autoincrement())
+  month       String @db.VarChar(4)
+  subscribers Int
+  insureds    Int
+}

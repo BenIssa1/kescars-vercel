@@ -1,0 +1,21 @@
+ title: "Déclaration enregistrée avec succès✅️",
+        description: (
+          <Card className="p-4 mt-2 shadow w-full">
+            <div className="space-y-2 text-sm">
+              <p>
+                <span className="font-semibold">Date du sinistre:</span>{" "}
+                {values.disasterDate.toLocaleDateString()}
+              </p>
+              <p>
+                <span className="font-semibold">Lieu:</span> {values.disasterPlace}
+              </p>
+              <p>
+                <span className="font-semibold">Centre de prise en charge:</span>{" "}
+                {values.hospitalCenter}
+              </p>
+              <p>
+                <span className="font-semibold">Rapport:</span> {values.accidentReport}
+              </p>
+            </div>
+          </Card>
+        ),
