@@ -18,9 +18,7 @@ interface subscriberButtonModalProps {
 
 export const SubscribersButtonModal = ({ subscriber }: subscriberButtonModalProps) => {
     const [open, setOpen] = React.useState(false)
-    let subscriberDatas: Subscriber[] = []
-    subscriberDatas.push(subscriber)
-
+    const subscriberDatas: Subscriber[] = [subscriber]
 
     return (
         <Popover open={open} onOpenChange={setOpen}>

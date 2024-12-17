@@ -18,7 +18,7 @@ interface bringerButtonModalProps {
 // A faire : recuperer les données de la table Bringers
 export const BringersButtonModal = ({ bringer }: bringerButtonModalProps) => {
     const [open, setOpen] = React.useState(false)
-    let bringerDatas: Bringer[]  = [bringer]
+    const bringerDatas: Bringer[]  = [bringer]
 
     return (
         <Popover open={open} onOpenChange={setOpen}>

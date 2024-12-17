@@ -17,7 +17,7 @@ interface companyButtonModalProps {
 
 export const CompanyButtonModal = ({ company }: companyButtonModalProps) => {
   const [open, setOpen] = React.useState(false);
-  let companyDatas: Company[] = [company]
+  const companyDatas: Company[] = [company]
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
